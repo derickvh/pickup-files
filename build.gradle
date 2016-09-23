@@ -1,0 +1,76 @@
+//build.gradle
+
+  repositories {
+      maven { url "http://repo.maven.apache.org/maven2" }
+    }
+
+    configurations {
+      antClasspath
+    }
+
+    // dependency for XMLResultAggregator task
+
+    dependencies {
+      antClasspath 'org.apache.ant:ant-junit:1.8.2'
+    }
+
+  // Define parameters for use by runSoapUI task
+
+  String soapuiExec, soapuiParameters
+
+  // Set Ant properties based on underlying platform
+
+if (org.gradle.internal.os.OperatingSystem.current().windows) {
+
+        soapuiExec = soapUIPathWin + '\\testrunner.bat'
+
+      } else if (org.gradle.internal.os.OperatingSystem.current().macOsX) {
+
+        soapuiExec = soapUIPathMacOS + '/testrunner.sh'
+
+      } else {
+
+        soapuiExec = soapUIPathUnix + '/testrunner.sh'
+}
+
+  ant.importBuild 'build.xml'
+
+  task runSoapUI {
+
+    doLast {
+
+      if (soapUIProject != 'None') {
+
+          soapuiParameters = soapUIParams + ' ' + soapUIProject
+
+          ant.mruntest(soapuiexec: soapuiExec, params: soapuiParameters)
+          soapuiXmlToHtml(projectDir)
+
+      } else {
+          ant.echo('Nothing to do.')
+      }
+    }
+  }
+
+def soapuiXmlToHtml(resultsDir) {
+
+    def targetDir = new File(resultsDir, 'html')
+
+    ant.taskdef(
+        name: 'junitreport',
+        classname: 'org.apache.tools.ant.taskdefs.optional.junit.XMLResultAggregator',
+        classpath: configurations.antClasspath.asPath
+    )
+
+    ant.junitreport(todir: resultsDir) {
+        fileset(dir: resultsDir, includes: 'TEST-*.xml')
+        report(todir: targetDir, format: "noframes")
+    }
+}
+
+tasks.runSoapUI {
+
+  description "Runs a SoapUI Test Project and save the test results as a junit report in the html folder."
+}
+
+runSoapUI.dependsOn('cleanup')

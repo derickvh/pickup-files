@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project id="d810ada3-1e44-466b-b9c7-c688f3a36a83" activeEnvironment="Default" name="pickup-file" resourceRoot="" soapui-version="5.2.1" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="a81c1e1f-1ee4-4eb6-a2f6-383ea432b190" name="TestSuite 1"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="b1cd5084-aa92-41be-88ab-c67dd6e67de5" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true"><con:settings/><con:testStep type="groovy" name="PUF 1" id="9cc254bd-a7a2-4bf2-aac5-8613c87f7fcd"><con:settings/><con:config><script>import com.oldmutual.iop.*
+
+import static java.lang.Integer.valueOf
+import static java.lang.Long.parseLong
+
+def groovyUtils = new com.eviware.soapui.support.GroovyUtils(context)
+def projectPath = groovyUtils.projectPath 
+String testDir = projectPath + '/testData'
+
+JMSConfiguration jmsConfig = new JMSConfiguration()
+
+jmsConfig.hostname = testRunner.testCase.getPropertyValue('hostname')
+jmsConfig.port = valueOf((String) testRunner.testCase.getPropertyValue('port'))
+jmsConfig.qmanager = testRunner.testCase.getPropertyValue('qmanager')
+jmsConfig.channel = testRunner.testCase.getPropertyValue('channel')
+jmsConfig.destination = testRunner.testCase.getPropertyValue('destination')
+jmsConfig.userID = testRunner.testCase.getPropertyValue('userID')
+jmsConfig.passwd = testRunner.testCase.getPropertyValue('passwd')
+jmsConfig.timeout = parseLong((String) testRunner.testCase.getPropertyValue('timeout'))
+
+log.info("${testDir}")
+
+JMSClient.sendFiles(jmsConfig, testDir)
+
+
+</script></con:config></con:testStep><con:testStep type="groovy" name="PUF 2" id="2b3e0db9-9d58-45f7-b915-2240f1e2d3e6"><con:settings/><con:config><script>import static java.lang.Integer.valueOf
+import static java.lang.Long.parseLong
+
+import com.eviware.soapui.support.XmlHolder
+import com.oldmutual.iop.*
+
+JMSConfiguration jmsConfig = new JMSConfiguration()
+
+jmsConfig.hostname = testRunner.testCase.getPropertyValue('hostname')
+jmsConfig.port = valueOf((String) testRunner.testCase.getPropertyValue('port'))
+jmsConfig.qmanager = testRunner.testCase.getPropertyValue('qmanager')
+jmsConfig.channel = testRunner.testCase.getPropertyValue('channel')
+jmsConfig.destination = testRunner.testCase.getPropertyValue('destination')
+jmsConfig.userID = testRunner.testCase.getPropertyValue('userID')
+jmsConfig.passwd = testRunner.testCase.getPropertyValue('passwd')
+jmsConfig.timeout = parseLong((String) testRunner.testCase.getPropertyValue('timeout'))
+
+String msg = JMSClient.read(jmsConfig)
+
+//log.info("Read message [ ${msg} ]")
+
+def xmlMsg = new XmlHolder(msg);
+
+xmlMsg.declareNamespace('ns', "http://org.newbury/ftjms/")
+
+String name = xmlMsg.getNodeValue('//ns:fileProcessor/ns:preProcess/ns:copy[1]/ns:fileSet[1]/ns:include/@name')
+
+//xmlMsg.getNodeValue('//ns:fileProcessor/ns:preProcess/ns:copy[1]/ns:fileSet[1]/@dir')
+
+//xmlMsg.getNodeValue('//ns:fileProcessor/ns:preProcess/ns:copy[1]/@chunkSize')
+
+//xmlMsg.getNodeValue('//ns:fileProcessor/ns:preProcess/@toDir')
+
+log.info("${name}")
+
+assert "^xw7.+\$" == name
+
+
+
+
+</script></con:config></con:testStep><con:properties><con:property><con:name>hostname</con:name><con:value>localhost</con:value></con:property><con:property><con:name>port</con:name><con:value>1415</con:value></con:property><con:property><con:name>qmanager</con:name><con:value>QMSPINOZA</con:value></con:property><con:property><con:name>channel</con:name><con:value>SERVCONN</con:value></con:property><con:property><con:name>userID</con:name><con:value>derick</con:value></con:property><con:property><con:name>passwd</con:name><con:value>282ng#15</con:value></con:property><con:property><con:name>destination</con:name><con:value>QIN1</con:value></con:property><con:property><con:name>timeout</con:name><con:value>1</con:value></con:property></con:properties></con:testCase><con:properties/></con:testSuite><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:sensitiveInformation/></con:soapui-project>

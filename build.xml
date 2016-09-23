@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="soapui.testrunner" basedir=".">
+
+	<!-- Create build start time stamp -->
+
+	<tstamp>
+		<format property="time.stamp" pattern="yyyy-MM-dd'T'HH:mm:ss" />
+	</tstamp>
+
+	<echo message="Test run start time: ${time.stamp}" />
+
+	<macrodef name="mruntest">
+
+		<attribute name="soapuiexec" />
+		<attribute name="params" />
+
+		<sequential>
+			<echo message="RUN.TEST target starting ...${line.separator}" />
+			<echo message="Command line: @{soapuiexec} @{params}${line.separator}" />
+			<exec executable="@{soapuiexec}" failonerror="true">
+				<arg line="@{params}" />
+			</exec>
+		</sequential>
+	</macrodef>
+
+	<target name="cleanup" description="Deletes old test reports and log files.">
+		<echo message="CLEANUP target is starting ...${line.separator}" />
+		<delete failonerror="false" verbose="true">
+			<fileset dir="${basedir}" includes="TEST*.xml" />
+			<fileset dir="${basedir}" includes="*.log" />
+		</delete>
+	</target>
+
+</project>

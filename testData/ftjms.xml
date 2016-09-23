@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<fileProcessor
+	
+	xmlns="http://org.newbury/ftjms/"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://org.newbury/ftjms ftjms.xsd "
+	version="1.0.4"
+>
+	<logfile
+		numberOf="10"
+		path="/opt/ftjms/logs"
+		name="ftjms%g.log"
+		size="10485760"
+		useXML="false"/>
+	<preProcess
+		toDir="/opt/ftjms/transfer/preprocess"
+		lockfileTTL="10"
+	>
+		<copy
+			chunkSize="204800"
+			copyOnly="true"
+			selectAtRuntime="false"
+			toDir="/opt/backup"
+		>
+			<fileSet dir="/home/dcs/outbound/mq">
+				<include name="^xw7.+$" />
+			</fileSet>
+			<fileSet dir="/opt/filedist/nbs/departures/mq">
+				<include name="^bord.+$" />
+			</fileSet>
+		</copy>
+		<copy
+			chunkSize="204800"
+			copyOnly="true"
+			selectAtRuntime="false"
+			toDir="/opt/backup/zipped"
+		>
+			<fileSet dir="/opt/filedist/nbs/departures/mq">
+				<include name="^supm.+$" />
+			</fileSet>
+		</copy>
+		<collect
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/opt/ftjms/transfer/preprocess"
+		>
+			<fileSet dir="/home/download/load">
+				<include name="^ABC.+.txt$" />
+			</fileSet>
+			<fileSet dir="/home/dcs/outbound/mq">
+				<include name="^SS.{5}DW.{1}\..{8}\.gz$" />
+			</fileSet>
+		</collect>
+		<compress
+			chunkSize="204800"
+			toDir="/opt/ftjms/transfer/preprocess"
+			useGZIP="true"
+		>
+			<fileSet dir="/opt/ftjms/transfer/preprocess">
+				<include name="*" />
+				<exclude name="^ABC.+txt$" />
+				<exclude name="^SS.{5}DW.{1}\..{8}\.gz$" />
+				<exclude name="^.+lck$" />
+			</fileSet>
+		</compress>
+		<split
+			chunkSize="204800"
+			splitThreshold="10485760"
+			toDir="/opt/ftjms/transfer/preprocess"
+		>
+			<fileSet dir="/opt/ftjms/transfer/preprocess">
+				<include name="*" />
+			</fileSet>
+		</split>
+		<move
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/opt/ftjms/transfer/source"
+		>
+			<fileSet dir="/opt/ftjms/transfer/preprocess">
+				<include name="*" />
+				<exclude name="^.+lck$" />
+			</fileSet>
+		</move>
+		<jmswrite>
+			<jndiConfiguration
+				initialContextFactory="com.ibm.mq.jms.context.WMQInitialContextFactory"
+				providerURL="localhost:1414/SERVERCONN"
+			/>
+			<jmsSessionConfiguration
+				connectionFactory="QMSPINOZA"
+				isTransactional="false"
+				acknowledgement="AUTO"
+			/>
+			<jmsMessageConfiguration
+				destination="JMSQ"
+				deliveryMode="NON_PERSISTENT"
+				priority="NORMAL"
+				replyToDestination="JMS_REPLY"
+			>
+				<fileSet dir="/opt/ftjms/transfer/source">
+					<include name="*" />
+					<exclude name="^xw7.+$" />
+					<exclude name="^SS.{5}DW.{1}\..{8}\.gz$" />
+				</fileSet>
+			</jmsMessageConfiguration>
+			<jmsMessageConfiguration
+				destination="JMSQ"
+				deliveryMode="NON_PERSISTENT"
+				priority="EXPEDITED"
+				replyToDestination="JMS_REPLY"
+			>
+				<fileSet dir="/opt/ftjms/transfer/source">
+					<include name="^xw7.+$" />
+				</fileSet>
+			</jmsMessageConfiguration>
+
+			<jmsMessageConfiguration
+				destination="JMSQ"
+				deliveryMode="PERSISTENT"
+				priority="NORMAL"
+				replyToDestination="JMS_REPLY"
+				archiveOnTransmit="true"
+				archiveDir="/opt/ftjms/transfer/archive"
+			>
+				<fileSet dir="/opt/ftjms/transfer/source">
+					<include name="^SS.{5}DW.{1}\..{8}\.gz$" />
+				</fileSet>
+			</jmsMessageConfiguration>
+		</jmswrite>
+	</preProcess>
+	<postProcess
+		dir="/opt/ftjms/transfer/postprocess"
+		lockfileTTL="10"
+	>
+		<jmsread>
+			<jndiConfiguration
+				providerURL="localhost:1414/SERVERCONN"
+				initialContextFactory="com.ibm.mq.jms.context.WMQInitialContextFactory"
+			/>
+			<jmsSessionConfiguration
+				connectionFactory="QMSPINOZA"
+				isTransactional="false"
+				acknowledgement="AUTO"
+			/>
+			<jmsMessageConfiguration
+				destination="JMSQ"
+				replyToDestination="JMS.REPLY"
+			>
+				<fileSet dir="/opt/ftjms/transfer/postprocess">
+					<include name="*" />
+				</fileSet>
+			</jmsMessageConfiguration>
+		</jmsread>
+		<join
+			chunkSize="204800"
+			retries="5"
+			retryInterval="1"
+			toDir="/opt/ftjms/transfer/postprocess"
+		>
+			<fileSet dir="/opt/ftjms/transfer/postprocess">
+				<include name="^.+-000000$" />
+			</fileSet>
+		</join>
+		<uncompress
+			chunkSize="204800"
+			toDir="/opt/ftjms/transfer/uncompress"
+			useGZIP="true"
+		>
+			<fileSet dir="/opt/ftjms/transfer/postprocess">
+				<include name=".+\.gz$" />
+			</fileSet>
+		</uncompress>
+		<move
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/opt/ftjms/transfer/uncompress"
+		>
+			<fileSet dir="/opt/ftjms/transfer/postprocess">
+				<include name="*" />
+				<exclude name="^.+-\d{6}$" />
+				<exclude name="^.+gz$" />
+				<exclude name="^.zip$" />
+				<exclude name="^.+lck$" />
+			</fileSet>
+		</move>
+		<copy
+			chunkSize="204800"
+			copyOnly="true"
+			selectAtRuntime="true"
+			toDir="/opt/backup/post"
+		>
+			<fileSet dir="/opt/ftjms/transfer/uncompress">
+				<include name="^SS.{5}DW.{1}\..{8}\.gz$" />
+			</fileSet>
+		</copy>
+		<deliver
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/home/download/dcpackextract"
+			useNIO="true"
+		>
+			<fileSet dir="/opt/ftjms/transfer/uncompress">
+				<include name="^ABC.+$" />
+				<exclude name="^.+-\d{6}$" />
+			</fileSet>
+		</deliver>
+		<deliver
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/opt/ftjms/transfer/ftp"
+			useNIO="true"
+		>
+			<fileSet dir="/opt/ftjms/transfer/uncompress">
+				<include name="^supm.+$" />
+				<include name="^bord.+$" />
+				<include name="^SS.{5}DW.{1}\..{8}\.gz$" />
+				<include name="^xw7.+$" />
+				<exclude name="^.+-\d{6}$" />
+			</fileSet>
+		</deliver>
+		<deliver
+			chunkSize="204800"
+			copyOnly="false"
+			selectAtRuntime="true"
+			toDir="/home/download"
+			useNIO="true"
+		>
+			<fileSet dir="/opt/ftjms/transfer/uncompress">
+				<include name="^xwt0.+$" />
+				<include name="^xwxa.+$" />
+				<exclude name="^.+-\d{6}$" />
+			</fileSet>
+		</deliver>
+	</postProcess>
+</fileProcessor>
+
