@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<con:soapui-project id="d810ada3-1e44-466b-b9c7-c688f3a36a83" activeEnvironment="Default" name="pickup-file" resourceRoot="" soapui-version="5.2.1" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="a81c1e1f-1ee4-4eb6-a2f6-383ea432b190" name="TestSuite 1"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="b1cd5084-aa92-41be-88ab-c67dd6e67de5" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true"><con:settings/><con:testStep type="groovy" name="PUF 1" id="9cc254bd-a7a2-4bf2-aac5-8613c87f7fcd"><con:settings/><con:config><script>import com.oldmutual.iop.*
+<con:soapui-project id="d810ada3-1e44-466b-b9c7-c688f3a36a83" activeEnvironment="Default" name="pickup-file" resourceRoot="" soapui-version="5.2.1" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite id="a81c1e1f-1ee4-4eb6-a2f6-383ea432b190" name="TestSuite 1"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase id="b1cd5084-aa92-41be-88ab-c67dd6e67de5" failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="TestCase 1" searchProperties="true"><con:settings/><con:testStep type="groovy" name="PUF 1" id="9cc254bd-a7a2-4bf2-aac5-8613c87f7fcd"><con:settings/><con:config><script>import com.oldmutual.iop.*
 
 import static java.lang.Integer.valueOf
 import static java.lang.Long.parseLong
 
 def groovyUtils = new com.eviware.soapui.support.GroovyUtils(context)
-def projectPath = groovyUtils.projectPath 
+def projectPath = groovyUtils.projectPath
 String testDir = projectPath + '/testData'
 
 JMSConfiguration jmsConfig = new JMSConfiguration()
@@ -64,4 +64,4 @@ assert "^xw7.+\$" == name
 
 
 
-</script></con:config></con:testStep><con:properties><con:property><con:name>hostname</con:name><con:value>localhost</con:value></con:property><con:property><con:name>port</con:name><con:value>1415</con:value></con:property><con:property><con:name>qmanager</con:name><con:value>QMSPINOZA</con:value></con:property><con:property><con:name>channel</con:name><con:value>SERVCONN</con:value></con:property><con:property><con:name>userID</con:name><con:value>derick</con:value></con:property><con:property><con:name>passwd</con:name><con:value>282ng#15</con:value></con:property><con:property><con:name>destination</con:name><con:value>QIN1</con:value></con:property><con:property><con:name>timeout</con:name><con:value>1</con:value></con:property></con:properties></con:testCase><con:properties/></con:testSuite><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
+</script></con:config></con:testStep><con:properties><con:property><con:name>hostname</con:name><con:value>localhost</con:value></con:property><con:property><con:name>port</con:name><con:value>1415</con:value></con:property><con:property><con:name>qmanager</con:name><con:value>QMSPINOZA</con:value></con:property><con:property><con:name>channel</con:name><con:value>SERVCONN</con:value></con:property><con:property><con:name>userID</con:name><con:value>derick</con:value></con:property><con:property><con:name>passwd</con:name><con:value>nopasswd</con:value></con:property><con:property><con:name>destination</con:name><con:value>QIN1</con:value></con:property><con:property><con:name>timeout</con:name><con:value>1</con:value></con:property></con:properties></con:testCase><con:properties/></con:testSuite><con:properties/><con:wssContainer/><con:oAuth2ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
